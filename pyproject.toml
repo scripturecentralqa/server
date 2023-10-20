@@ -1,19 +1,19 @@
 [tool.poetry]
-name = "server"
+name = "scqa-server"
 version = "0.0.0"
-description = "Server"
+description = "Server for scripture central qa"
 authors = ["Dallan Quass <dallan@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/DallanQ/server"
-repository = "https://github.com/DallanQ/server"
-documentation = "https://server.readthedocs.io"
+homepage = "https://github.com/scripturecentralqa/server"
+repository = "https://github.com/scripturecentralqa/server"
+documentation = "https://scqa-server.readthedocs.io"
 classifiers = [
     "Development Status :: 1 - Planning",
 ]
 
 [tool.poetry.urls]
-Changelog = "https://github.com/DallanQ/server/releases"
+Changelog = "https://github.com/scripturecentralqa/server/releases"
 
 [tool.poetry.dependencies]
 python = "^3.10"

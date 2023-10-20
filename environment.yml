@@ -1,4 +1,4 @@
-name: ilc-server
+name: scqa-server
 channels:
   - conda-forge
   - defaults

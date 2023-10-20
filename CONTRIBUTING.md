@@ -12,9 +12,9 @@ Here is a list of important resources for contributors:
 - [Code of Conduct]
 
 [mit license]: https://opensource.org/licenses/MIT
-[source code]: https://github.com/DallanQ/server
-[documentation]: https://server.readthedocs.io/
-[issue tracker]: https://github.com/DallanQ/server/issues
+[source code]: https://github.com/scripturecentralqa/server
+[documentation]: https://scqa-server.readthedocs.io/
+[issue tracker]: https://github.com/scripturecentralqa/server/issues
 
 ## How to report a bug
 
@@ -108,7 +108,7 @@ $ nox --session=pre-commit -- install
 It is recommended to open an issue before starting work on anything.
 This will allow a chance to talk it over with the owners and validate your approach.
 
-[pull request]: https://github.com/DallanQ/server/pulls
+[pull request]: https://github.com/scripturecentralqa/server/pulls
 
 <!-- github-only -->
 

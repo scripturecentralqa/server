@@ -25,6 +25,7 @@
 - Pinecone account: https://www.pinecone.io/
 
 ## Installation
+
 Install rtx: https://github.com/jdx/rtx
 
 - when you cd to the project directory, run `rtx install` to install the correct version of python, poetry, and pipx
@@ -32,6 +33,8 @@ Install rtx: https://github.com/jdx/rtx
 Install dependencies using poetry: `poetry install`
 
 Install nox: `poetry run pipx install nox && poetry run pipx inject nox nox-poetry`
+
+Install pre-commit as a git hook: `poetry run pre-commit install`
 
 create a `.env` file with the following variables:
 

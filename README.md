@@ -23,17 +23,15 @@
 
 - OpenAI API account: https://platform.openai.com/
 - Pinecone account: https://www.pinecone.io/
-- python 3.10
-- Poetry: `curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0`
-- pipx: `pip install --user pipx`
-- nox: `pipx install nox && pipx inject nox nox-poetry`
 
 ## Installation
+Install rtx: https://github.com/jdx/rtx
 
-```console
-poetry install
-python -m spacy download en_core_web_sm
-```
+- when you cd to the project directory, run `rtx install` to install the correct version of python, poetry, and pipx
+
+Install dependencies using poetry: `poetry install`
+
+Install nox: `poetry run pipx install nox && poetry run pipx inject nox nox-poetry`
 
 create a `.env` file with the following variables:
 
@@ -41,6 +39,7 @@ create a `.env` file with the following variables:
 OPENAI_KEY=your_openai_api_key (found on API keys page)
 OPENAI_ORG=your_openai_org (found on Settings page)
 PINECONE_KEY=your_pinecone_api_key (found on API keys page)
+PINECONE_ENV=your_pinecone_environment_name (found on API keys page)
 ```
 
 ## Usage

@@ -48,7 +48,7 @@ PINECONE_ENV=your_pinecone_environment_name (found on API keys page)
 ## Usage
 
 ```console
-uvicorn src.server.main:app --reload
+uvicorn server.main:app --reload
 ```
 
 ## Development

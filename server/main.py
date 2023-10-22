@@ -69,11 +69,9 @@ prompt_content = (
 class SearchResult(BaseModel):
     """Search result."""
 
-    id: int
+    id: str
     title: str
     author: str
-    year: str
-    month: str
     url: str
     text: str
 
@@ -162,11 +160,7 @@ async def search(
                 title=res["metadata"]["title"],
                 text=res["metadata"]["text"],
                 author=res["metadata"]["author"],
-                year=res["metadata"]["year"],
-                month=res["metadata"]["month"],
-                url=f'{res["metadata"]["url"]}#{res["metadata"]["anchor"]}'
-                if "anchor" in res["metadata"] and res["metadata"]["anchor"]
-                else res["metadata"]["url"],
+                url=res["metadata"]["url"],
             )
             for res in query_response["matches"]
         ],

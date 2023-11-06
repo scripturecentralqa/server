@@ -71,7 +71,6 @@ class SearchResult(BaseModel):
 
     id: str
     title: str
-    author: str
     url: str
     text: str
 
@@ -159,7 +158,6 @@ async def search(
                 id=res["id"],
                 title=res["metadata"]["title"],
                 text=res["metadata"]["text"],
-                author=res["metadata"]["author"],
                 url=res["metadata"]["url"],
             )
             for res in query_response["matches"]

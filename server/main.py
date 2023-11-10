@@ -58,10 +58,15 @@ cloudwatch = boto3.client("cloudwatch") if metric_namespace else None
 # other constants
 search_limit = 20
 max_answer_tokens = 500
-role_content = "You are an apostle of the Church of Jesus Christ of Latter-day Saints"
+role_content = "You are an apostle of Jesus Christ."
+# role_content = "You are an apostle of the Church of Jesus Christ of Latter-day Saints"
 prompt_content = (
-    "Answer the question as truthfully as possible using the provided context, "
-    + 'and if answer is not contained within the text below, say "Sorry, I don\'t know".'
+    "Answer the question as truthfully as possible using the numbered contexts below and if the"
+    + ' answer is not contained within the text below, say "Sorry, I don\'t know". Please give a'
+    + " detailed answer. For each sentence in your answer, provide a link to the contexts the"
+    + " sentence came from using the format [^context number]."
+    # "Answer the question as truthfully as possible using the provided context, "
+    # + 'and if answer is not contained within the text below, say "Sorry, I don\'t know".'
 )
 
 
@@ -70,6 +75,7 @@ class SearchResult(BaseModel):
     """Search result."""
 
     id: str
+    index: int
     title: str
     url: str
     text: str
@@ -156,11 +162,12 @@ async def search(
         results=[
             SearchResult(
                 id=res["id"],
+                index=ix + 1,
                 title=res["metadata"]["title"],
                 text=res["metadata"]["text"],
                 url=res["metadata"]["url"],
             )
-            for res in query_response["matches"]
+            for ix, res in enumerate(query_response["matches"])
         ],
     )
 

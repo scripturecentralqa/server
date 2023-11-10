@@ -12,3 +12,41 @@ def test_get_prompt() -> None:
         100,
     )
     assert 90 <= len(prompt) <= 100
+    assert (
+        prompt
+        == "This is my prompt content\n\nContexts:\n\n1. Answer...1\n---\n2. Answer...2\n\n"
+        + "Question: Question?\n\nAnswer:"
+    )
+
+
+def test_remove_markdown() -> None:
+    """It tests removing markdown."""
+    text = """## Header
+* List item 1
+* List item 2
+Inline # character
+This is **bold** and *italic*.
+This is a [link](https://example.com)
+This is `inline code`
+This is an image ![alt text](image.jpg)
+---
+> This is a block quote
+
+This is a paragraph."""
+    clean = search_utils.remove_markdown(text)
+    assert (
+        clean
+        == """
+
+Header
+List item 1
+List item 2
+Inline # character
+This is bold and italic.
+This is a link
+This is inline code
+This is an image alt text
+This is a block quote
+
+This is a paragraph."""
+    )

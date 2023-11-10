@@ -11,7 +11,7 @@ import botocore  # type: ignore
 logger = logging.getLogger(__name__)
 
 
-def remove_markdown(text):
+def remove_markdown(text: str) -> str:
     """Remove markdown markup from the given text."""
     # Patterns to remove (basic Markdown syntax)
     patterns = [

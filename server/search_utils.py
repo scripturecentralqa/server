@@ -22,9 +22,11 @@ def remove_markdown(text: str) -> str:
         (r"\`{1,3}(.*?)\`{1,3}", "\\1"),  # Inline code and code blocks
         (r"(?:^|\n) *\> *(.*)", "\n\\1"),  # Blockquotes
         (r"(?:^|\n) *\* *(.*)", "\n\\1"),  # Lists
+        (r"(?:^|\n) *\d+\.? *(.*)", "\n\\1"),  # Lists
         (r"(?:^|\n) *\#{1,6} *", "\n\n"),  # Headers
         (r"(?:^|\n)\-{3,}\s", "\n"),  # Horizontal rules
-        (r"\n{3,}", "\n\n"),  # Extra newlines
+        (r"(?:^|\n)\={3,}\s", "\n"),  # Horizontal rules
+        (r"(\n *){2,}", "\n"),  # Extra newlines
         (r"\ {2,}", " "),  # Extra spaces
     ]
     # Remove each pattern from the text

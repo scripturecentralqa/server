@@ -40,7 +40,7 @@ app = FastAPI(debug=debug)
 # init openai
 openai.api_key = openai_key
 embedding_model = "text-embedding-ada-002"
-prompt_limit = 3000  # 3750
+prompt_limit = 10000
 
 # init pinecone
 index_name = "scqa"
@@ -57,7 +57,7 @@ cloudwatch = boto3.client("cloudwatch") if metric_namespace else None
 
 # other constants
 search_limit = 20
-max_answer_tokens = 500
+max_answer_tokens = 512
 role_content = "You are an apostle of Jesus Christ."
 # role_content = "You are an apostle of the Church of Jesus Christ of Latter-day Saints"
 prompt_content = (
@@ -135,6 +135,7 @@ async def search(
     prompt, n_contexts = get_prompt(prompt_content, q, texts, prompt_limit)
 
     # get answer
+    print("PROMPT", prompt)
     start = time.perf_counter()
     answer_response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -145,8 +146,9 @@ async def search(
             },
             {"role": "user", "content": prompt},
         ],
-        temperature=0.2,
+        temperature=0.0,
         max_tokens=max_answer_tokens,
+        top_p=1.0,
         frequency_penalty=0,
         presence_penalty=0,
         stop=None,

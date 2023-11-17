@@ -61,6 +61,11 @@ def get_prompt(
     return _get_prompt_for_contexts(contexts[0:n_contexts]), n_contexts
 
 
+def get_norag_prompt(prompt: str, query: str) -> str:
+    """Get prompt for query."""
+    return prompt + f"\n\nQuestion: {query}\n\nAnswer:"
+
+
 def log_metrics(
     cloudwatch: Any,
     metric_namespace: str,

@@ -7,6 +7,7 @@ import traceback
 from enum import IntEnum
 from typing import Awaitable
 from typing import Callable
+from typing import Optional
 
 import boto3  # type: ignore
 import openai
@@ -86,7 +87,7 @@ class SearchResult(BaseModel):
     id: str
     index: int
     title: str
-    url: str
+    url: Optional[str] = ""
     text: str
 
 
@@ -190,7 +191,7 @@ async def search(
                 index=ix + 1,
                 title=res["metadata"]["title"],
                 text=res["metadata"]["text"],
-                url=res["metadata"]["url"],
+                url=res["metadata"].get("url", ""),
             )
             for ix, res in enumerate(search_results)
         ],

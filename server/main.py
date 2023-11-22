@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
 
+from server.search_utils import fix_citations
 from server.search_utils import get_norag_prompt
 from server.search_utils import get_prompt
 from server.search_utils import log_metrics
@@ -171,6 +172,7 @@ async def search(
         answer_secs = time.perf_counter() - start
         answer = answer_response["choices"][0]["message"]["content"].strip()
         if answer != "Sorry, I don't know.":
+            answer = fix_citations(answer)
             break
         if tried_norag:
             break

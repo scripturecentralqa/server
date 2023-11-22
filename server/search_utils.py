@@ -66,6 +66,15 @@ def get_norag_prompt(prompt: str, query: str) -> str:
     return prompt + f"\n\nQuestion: {query}\n\nAnswer:"
 
 
+def fix_citations(answer: str) -> str:
+    """Fix citation references in the answer."""
+    # replace [\d{1,2}] with [^\d{1,2}]
+    answer = re.sub(r"\[(\d{1,2})\]", r"[^\1]", answer)
+    # replace [^context \d{1,2}] with [^\d{1,2}]
+    answer = re.sub(r"\[\^context (\d{1,2})\]", r"[^\1]", answer)
+    return answer
+
+
 def log_metrics(
     cloudwatch: Any,
     metric_namespace: str,

@@ -53,3 +53,17 @@ This is an image alt text
 This is a block quote
 This is a paragraph."""
     )
+
+
+def test_fix_citations() -> None:
+    """It fixes citations."""
+    tests = [
+        "asdf [1] asdf",
+        "asdf [^context 1] asdf",
+    ]
+    expected = [
+        "asdf [^1] asdf",
+        "asdf [^1] asdf",
+    ]
+    for test, exp in zip(tests, expected):
+        assert search_utils.fix_citations(test) == exp

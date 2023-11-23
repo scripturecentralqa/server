@@ -131,8 +131,8 @@ async def search(
     background_tasks: BackgroundTasks = BackgroundTasks(),  # noqa: B008
 ) -> SearchResponse:
     """Search."""
-    embed_secs = 0
-    index_secs = 0
+    embed_secs = 0.0
+    index_secs = 0.0
     # get answer
     while True:
         if query_type == "rag":

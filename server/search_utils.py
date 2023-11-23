@@ -89,6 +89,7 @@ def log_metrics(
     cloudwatch: Any,
     metric_namespace: str,
     metric_name: str,
+    query_type: str,
     embed_secs: float,
     index_secs: float,
     answer_secs: float,
@@ -102,37 +103,37 @@ def log_metrics(
             Namespace=metric_namespace,
             MetricData=[
                 {
-                    "MetricName": f"{metric_name}_embed_seconds",
+                    "MetricName": f"{metric_name}_{query_type}_embed_seconds",
                     "Value": embed_secs,
                     "Unit": "Seconds",
                 },
                 {
-                    "MetricName": f"{metric_name}_index_seconds",
+                    "MetricName": f"{metric_name}_{query_type}_index_seconds",
                     "Value": index_secs,
                     "Unit": "Seconds",
                 },
                 {
-                    "MetricName": f"{metric_name}_answer_seconds",
+                    "MetricName": f"{metric_name}_{query_type}_answer_seconds",
                     "Value": answer_secs,
                     "Unit": "Seconds",
                 },
                 {
-                    "MetricName": f"{metric_name}_prompt_length",
+                    "MetricName": f"{metric_name}_{query_type}_prompt_length",
                     "Value": prompt_len,
                     "Unit": "Count",
                 },
                 {
-                    "MetricName": f"{metric_name}_prompt_contexts",
+                    "MetricName": f"{metric_name}_{query_type}_prompt_contexts",
                     "Value": n_contexts,
                     "Unit": "Count",
                 },
                 {
-                    "MetricName": f"{metric_name}_answer_length",
+                    "MetricName": f"{metric_name}_{query_type}_answer_length",
                     "Value": answer_len,
                     "Unit": "Count",
                 },
                 {
-                    "MetricName": f"{metric_name}_hits",
+                    "MetricName": f"{metric_name}_{query_type}_hits",
                     "Value": 1,
                     "Unit": "Count",
                 },

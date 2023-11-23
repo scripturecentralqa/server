@@ -23,6 +23,7 @@ from starlette.responses import Response
 from server.search_utils import fix_citations
 from server.search_utils import get_norag_prompt
 from server.search_utils import get_prompt
+from server.search_utils import get_url
 from server.search_utils import log_metrics
 
 
@@ -89,6 +90,7 @@ class SearchResult(BaseModel):
     index: int
     title: str
     url: Optional[str] = ""
+    score: float
     text: str
 
 
@@ -125,32 +127,44 @@ async def log_exceptions_middleware(
 @app.get("/search")
 async def search(
     q: str = Query(max_length=100),
+    query_type: str = Query(default="rag", max_length=10),
     background_tasks: BackgroundTasks = BackgroundTasks(),  # noqa: B008
 ) -> SearchResponse:
     """Search."""
-    # get query embedding
-    start = time.perf_counter()
-    embed_response = openai.Embedding.create(
-        input=[q], engine=embedding_model
-    )  # type: ignore
-    embed_secs = time.perf_counter() - start
-    embedding = embed_response["data"][0]["embedding"]
-
-    # query index
-    start = time.perf_counter()
-    query_response = index.query(embedding, top_k=search_limit, include_metadata=True)
-    index_secs = time.perf_counter() - start
-
-    # get prompt
-    texts = [res["metadata"]["text"] for res in query_response["matches"]]
-    prompt_content = rag_prompt_content
-    prompt, n_contexts = get_prompt(rag_prompt_content, q, texts, prompt_limit)
-    role_content = rag_role_content
-    search_results = query_response["matches"]
-
+    embed_secs = 0
+    index_secs = 0
     # get answer
-    tried_norag = False
     while True:
+        if query_type == "rag":
+            # get query embedding
+            start = time.perf_counter()
+            embed_response = openai.Embedding.create(
+                input=[q], engine=embedding_model
+            )  # type: ignore
+            embed_secs = time.perf_counter() - start
+            embedding = embed_response["data"][0]["embedding"]
+
+            # query index
+            start = time.perf_counter()
+            query_response = index.query(
+                embedding, top_k=search_limit, include_metadata=True
+            )
+            index_secs = time.perf_counter() - start
+
+            # get prompt
+            texts = [res["metadata"]["text"] for res in query_response["matches"]]
+            prompt_content = rag_prompt_content
+            prompt, n_contexts = get_prompt(rag_prompt_content, q, texts, prompt_limit)
+            role_content = rag_role_content
+            search_results = query_response["matches"]
+            print("search_results", search_results)
+        else:  # norag
+            prompt_content = norag_prompt_content
+            prompt = get_norag_prompt(norag_prompt_content, q)
+            role_content = norag_role_content
+            search_results = []
+            n_contexts = 0
+
         print("PROMPT", prompt)
         start = time.perf_counter()
         answer_response = openai.ChatCompletion.create(
@@ -171,16 +185,11 @@ async def search(
         )  # type: ignore
         answer_secs = time.perf_counter() - start
         answer = answer_response["choices"][0]["message"]["content"].strip()
-        if answer != "Sorry, I don't know.":
+        if query_type == "rag" and answer == "Sorry, I don't know.":
+            query_type = "norag"
+        else:
             answer = fix_citations(answer)
             break
-        if tried_norag:
-            break
-        prompt_content = norag_prompt_content
-        prompt = get_norag_prompt(norag_prompt_content, q)
-        role_content = norag_role_content
-        search_results = []
-        tried_norag = True
 
     # create response
     response = SearchResponse(
@@ -191,9 +200,10 @@ async def search(
             SearchResult(
                 id=res["id"],
                 index=ix + 1,
+                score=res["score"],
                 title=res["metadata"]["title"],
                 text=res["metadata"]["text"],
-                url=res["metadata"].get("url", ""),
+                url=get_url(res["metadata"]),
             )
             for ix, res in enumerate(search_results)
         ],
@@ -213,6 +223,7 @@ async def search(
             cloudwatch,
             metric_namespace,
             "search",
+            query_type,
             embed_secs,
             index_secs,
             answer_secs,

@@ -35,6 +35,16 @@ def remove_markdown(text: str) -> str:
     return text
 
 
+def get_url(metadata: dict[str, Any]) -> str:
+    """Get URL from metadata."""
+    url = ""
+    if "url" in metadata:
+        url += metadata["url"]
+    if "anchor" in metadata:
+        url += "#" + metadata["anchor"]
+    return url
+
+
 def get_prompt(
     prompt: str,
     query: str,

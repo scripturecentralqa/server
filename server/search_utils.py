@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 def remove_markdown(text: str) -> str:
     """Remove markdown markup from the given text."""
+    # copied to models repo: models/split_utils.py
     # Patterns to remove (basic Markdown syntax)
     patterns = [
         (r"\!\[(.*?)\]\(.*?\)", "\\1"),  # Images

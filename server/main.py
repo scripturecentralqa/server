@@ -12,6 +12,7 @@ from typing import Optional
 import boto3  # type: ignore
 import openai
 import pinecone  # type: ignore
+import voyageai  # type: ignore
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
@@ -19,6 +20,7 @@ from fastapi import Query
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
+from voyageai import get_embeddings as get_voyageai_embeddings
 
 from server.search_utils import fix_citations
 from server.search_utils import get_norag_prompt
@@ -32,6 +34,7 @@ load_dotenv()
 pinecone_key = os.environ["PINECONE_KEY"]
 pinecone_env = os.environ["PINECONE_ENV"]
 openai_key = os.environ["OPENAI_KEY"]
+voyageai_key = os.environ["VOYAGE_API_KEY"]
 
 # init logging
 logging.config.fileConfig("server/logging.ini")
@@ -43,8 +46,11 @@ app = FastAPI(debug=debug)
 
 # init openai
 openai.api_key = openai_key
-embedding_model = "text-embedding-ada-002"
+# embedding_model = "text-embedding-ada-002"
 prompt_limit = 10000
+
+# init voyageai
+voyageai.api_key = voyageai_key
 
 # init pinecone
 index_name = "scqa"
@@ -138,11 +144,14 @@ async def search(
         if query_type == "rag":
             # get query embedding
             start = time.perf_counter()
-            embed_response = openai.Embedding.create(
-                input=[q], engine=embedding_model
-            )  # type: ignore
+            # embed_response = openai.Embedding.create(
+            #     input=[q], engine=embedding_model
+            # )  # type: ignore
+            # embedding = embed_response["data"][0]["embedding"]
+            embedding = get_voyageai_embeddings(
+                q, model="voyage-01", input_type="query"
+            )
             embed_secs = time.perf_counter() - start
-            embedding = embed_response["data"][0]["embedding"]
 
             # query index
             start = time.perf_counter()

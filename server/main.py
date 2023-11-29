@@ -149,8 +149,8 @@ async def search(
             # )  # type: ignore
             # embedding = embed_response["data"][0]["embedding"]
             embedding = get_voyageai_embeddings(
-                q, model="voyage-01", input_type="query"
-            )
+                [q], model="voyage-01", input_type="query"
+            )[0]
             embed_secs = time.perf_counter() - start
 
             # query index

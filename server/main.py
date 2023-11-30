@@ -47,7 +47,7 @@ app = FastAPI(debug=debug)
 # init openai
 openai.api_key = openai_key
 # embedding_model = "text-embedding-ada-002"
-prompt_limit = 7000
+prompt_limit = 10000
 
 # init voyageai
 voyageai.api_key = voyageai_key
@@ -141,7 +141,7 @@ async def search(
     index_secs = 0.0
     # get answer
     while True:
-        if query_type == "rag":
+        if query_type == "rag" or query_type == "ragonly":
             # get query embedding
             start = time.perf_counter()
             # embed_response = openai.Embedding.create(

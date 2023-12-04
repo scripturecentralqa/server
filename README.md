@@ -45,20 +45,20 @@ PINECONE_KEY=your_pinecone_api_key (found on API keys page)
 PINECONE_ENV=your_pinecone_environment_name (found on API keys page)
 ```
 
+## Development
+
+Activate the poetry virtual environment: `poetry shell`
+
+Periodically add the files you are working on to git and run the following to make sure the code is high quality:
+
+- `pre-commit run -a`
+- `mypy server tests`
+- `pytest .`
+
 ## Usage
 
 ```console
 uvicorn server.main:app --reload
-```
-
-## Development
-
-These command-line utilities check code quality.
-
-```console
-pre-commit run -a
-pytest
-nox
 ```
 
 ## Contributing

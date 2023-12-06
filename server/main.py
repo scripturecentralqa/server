@@ -140,6 +140,24 @@ async def search(
     embed_secs = 0.0
     index_secs = 0.0
     # get answer
+    query_prompt = f"Please write a paragraph to answer the question \nQuestion: {q}"
+    q = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                # "content": role_content,
+            },
+            {"role": "user", "content": query_prompt},
+        ],
+        temperature=0.0,
+        max_tokens=max_answer_tokens,
+        top_p=1.0,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None,
+    )
+    # print(q)
     while True:
         if query_type == "rag" or query_type == "ragonly":
             # get query embedding

@@ -31,6 +31,7 @@ pinecone-client = {extras = ["grpc"], version = "^2.2.1"}
 spacy = "^3.5.0"
 boto3 = "^1.26.111"
 voyageai = "^0.1.3"
+cohere = "^4.37"
 
 [tool.poetry.dev-dependencies]
 Pygments = ">=2.10.0"

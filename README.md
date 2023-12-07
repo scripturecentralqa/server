@@ -91,4 +91,3 @@ This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter]
 [license]: https://github.com/DallanQ/server/blob/main/LICENSE
 [contributor guide]: https://github.com/DallanQ/server/blob/main/CONTRIBUTING.md
 [command-line reference]: https://server.readthedocs.io/en/latest/usage.html
- 

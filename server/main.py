@@ -17,7 +17,6 @@ from dotenv import load_dotenv
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
 from fastapi import Query
-from fastapi import HTTPException
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
@@ -141,10 +140,10 @@ async def search(
     embed_secs = 0.0
     index_secs = 0.0
     # get answer
-    
+
     while True:
         if query_type == "rag" or query_type == "ragonly":
-            
+
             # get query embedding
             start = time.perf_counter()
             # embed_response = openai.Embedding.create(
@@ -155,7 +154,6 @@ async def search(
                 [q], model="voyage-01", input_type="query"
             )[0]
             embed_secs = time.perf_counter() - start
-
 
             # query index
             start = time.perf_counter()
@@ -197,10 +195,12 @@ async def search(
                 presence_penalty=0,
                 stop=None,
             )  # type: ignore
-            
+
             answer = answer_response["choices"][0]["message"]["content"].strip()
-        except Exception as e:
-            answer = "Sorry, we can't provide an answer right now. Please try again later."
+        except Exception:
+            answer = (
+                "Sorry, we can't provide an answer right now. Please try again later."
+            )
         answer_secs = time.perf_counter() - start
         if query_type == "rag" and answer == "Sorry, I don't know.":
             query_type = "norag"

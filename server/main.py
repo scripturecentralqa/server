@@ -141,7 +141,7 @@ async def search(
     index_secs = 0.0
     # get answer
     query_prompt = f"Please write a paragraph to answer the question \nQuestion: {q}"
-    q = openai.ChatCompletion.create(
+    gpt_response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             {
@@ -156,7 +156,8 @@ async def search(
         frequency_penalty=0,
         presence_penalty=0,
         stop=None,
-    )
+    )  # type: ignore
+    q_answer = gpt_response["choices"][0]["message"]["content"].strip()
     # print(q)
     while True:
         if query_type == "rag" or query_type == "ragonly":
@@ -167,7 +168,7 @@ async def search(
             # )  # type: ignore
             # embedding = embed_response["data"][0]["embedding"]
             embedding = get_voyageai_embeddings(
-                [q], model="voyage-01", input_type="query"
+                [q_answer], model="voyage-01", input_type="query"
             )[0]
             embed_secs = time.perf_counter() - start
 

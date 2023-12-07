@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
 from fastapi import Query
+from fastapi import HTTPException
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
@@ -180,7 +181,6 @@ async def search(
         print("PROMPT", prompt)
         start = time.perf_counter()
         try:
-            openai.api_key = os.environ["OPENAI_API_KEY"]
             answer_response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -197,10 +197,11 @@ async def search(
                 presence_penalty=0,
                 stop=None,
             )  # type: ignore
-        except KeyError:
-            raise HTTPException(status_code=500, detail="Missing OPENAI_API_KEY")
+            
+            answer = answer_response["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            answer = "Sorry, we can't provide an answer right now. Please try again later."
         answer_secs = time.perf_counter() - start
-        answer = answer_response["choices"][0]["message"]["content"].strip()
         if query_type == "rag" and answer == "Sorry, I don't know.":
             query_type = "norag"
         else:

@@ -146,7 +146,7 @@ async def search(
         messages=[
             {
                 "role": "system",
-                # "content": role_content,
+                "content": rag_role_content,
             },
             {"role": "user", "content": query_prompt},
         ],

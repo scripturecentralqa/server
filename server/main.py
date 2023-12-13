@@ -142,16 +142,16 @@ async def search(
     # get answer
     while True:
         if query_type == "rag" or query_type == "ragonly":
-            # get query embedding
+            get query embedding
             start = time.perf_counter()
-            # embed_response = openai.Embedding.create(
-            #     input=[q], engine=embedding_model
-            # )  # type: ignore
-            # embedding = embed_response["data"][0]["embedding"]
-            embedding = get_voyageai_embeddings(
-                [q], model="voyage-01", input_type="query"
-            )[0]
-            embed_secs = time.perf_counter() - start
+            embed_response = openai.Embedding.create(
+            input=[q], engine=embedding_model
+            )  # type: ignore
+            embedding = embed_response["data"][0]["embedding"]
+            # embedding = get_voyageai_embeddings(
+            #    [q], model="voyage-01", input_type="query"
+            #)[0]
+            # embed_secs = time.perf_counter() - start
 
             # query index
             start = time.perf_counter()

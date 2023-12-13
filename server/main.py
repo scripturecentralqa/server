@@ -10,17 +10,21 @@ from typing import Callable
 from typing import Optional
 
 import boto3  # type: ignore
-import openai
+import openai # type: ignore
 import pinecone  # type: ignore
 import voyageai  # type: ignore
-from dotenv import load_dotenv
-from fastapi import BackgroundTasks
-from fastapi import FastAPI
-from fastapi import Query
-from pydantic import BaseModel
-from starlette.requests import Request
-from starlette.responses import Response
+
+import cohere # type: ignore
+
+from dotenv import load_dotenv # type: ignore
+from fastapi import BackgroundTasks # type: ignore
+from fastapi import FastAPI # type: ignore
+from fastapi import Query # type: ignore
+from pydantic import BaseModel # type: ignore
+from starlette.requests import Request # 
+from starlette.responses import Response # type: ignore
 from voyageai import get_embeddings as get_voyageai_embeddings
+from cohere.api import get_cohere_embedding # 
 
 from server.search_utils import fix_citations
 from server.search_utils import get_norag_prompt
@@ -35,7 +39,7 @@ pinecone_key = os.environ["PINECONE_KEY"]
 pinecone_env = os.environ["PINECONE_ENV"]
 openai_key = os.environ["OPENAI_KEY"]
 voyageai_key = os.environ["VOYAGE_API_KEY"]
-
+cohere_key = os.environ["COHERE_KEY"]
 # init logging
 logging.config.fileConfig("server/logging.ini")
 logger = logging.getLogger(__name__)
@@ -128,6 +132,18 @@ async def log_exceptions_middleware(
             },
         )
         return Response(status_code=500, content="Internal Server Error")
+    
+def rerank_with_cohere(query: str, search_results: list) -> list:
+    """
+    Rerank search results using Cohere.
+    :param query: The user query.
+    :param search_results: Initial search results.
+    :return: Reranked search results.
+    """
+    cohere_embedding = get_cohere_embedding(query)
+    co = cohere.Client(cohere_key)
+    reranked_results = co.rerank(model="rerank-english-v2.0", query=query, documents=search_results, top_n=search_limit)
+    return reranked_results
 
 
 @app.get("/search")
@@ -142,21 +158,22 @@ async def search(
     # get answer
     while True:
         if query_type == "rag" or query_type == "ragonly":
-            get query embedding
+            #get query embedding
             start = time.perf_counter()
-            embed_response = openai.Embedding.create(
-            input=[q], engine=embedding_model
-            )  # type: ignore
-            embedding = embed_response["data"][0]["embedding"]
-            # embedding = get_voyageai_embeddings(
+            cohere_embedding = get_cohere_embedding(q)
+            #embed_response = openai.Embedding.create(
+            #input=[q], engine=embedding_model
+            #)  # type: ignore
+            #embedding = embed_response["data"][0]["embedding"]
+            #embedding = get_voyageai_embeddings(
             #    [q], model="voyage-01", input_type="query"
             #)[0]
-            # embed_secs = time.perf_counter() - start
+            embed_secs = time.perf_counter() - start
 
             # query index
             start = time.perf_counter()
             query_response = index.query(
-                embedding, top_k=search_limit, include_metadata=True
+                cohere_embedding, top_k=search_limit, include_metadata=True
             )
             index_secs = time.perf_counter() - start
 
@@ -167,6 +184,11 @@ async def search(
             role_content = rag_role_content
             search_results = query_response["matches"]
             print("search_results", search_results)
+            
+            # Rerank using Cohere
+            reranked_results = rerank_with_cohere(q, search_results)
+            # Use the reranked results
+            search_results = reranked_results
         else:  # norag
             prompt_content = norag_prompt_content
             prompt = get_norag_prompt(norag_prompt_content, q)

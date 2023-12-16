@@ -11,17 +11,17 @@ from typing import Optional
 
 import boto3  # type: ignore
 import cohere  # type: ignore
-import openai
+import openai  # type: ignore
 import pinecone  # type: ignore
 import voyageai  # type: ignore
-from cohere.api import get_cohere_embedding  # type: ignore
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # type: ignore
 from fastapi import BackgroundTasks  # type: ignore
-from fastapi import FastAPI
-from fastapi import Query
-from pydantic import BaseModel
+from fastapi import FastAPI  # type: ignore
+from fastapi import Query  # type: ignore
+from pydantic import BaseModel  # type: ignore
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import Response  # type: ignore
+from voyageai import get_embeddings as get_voyageai_embeddings
 
 from server.search_utils import fix_citations
 from server.search_utils import get_norag_prompt
@@ -30,13 +30,17 @@ from server.search_utils import get_url
 from server.search_utils import log_metrics
 
 
+# from cohere import get_cohere_embedding #
+
+
+
 # init environment
 load_dotenv()
-pinecone_key = os.environ["PINECONE_KEY"]
+pinecone_key = os.environ["PINECONE_API_KEY"]
 pinecone_env = os.environ["PINECONE_ENV"]
-openai_key = os.environ["OPENAI_KEY"]
+openai_key = os.environ["OPENAI_API_KEY"]
 voyageai_key = os.environ["VOYAGE_API_KEY"]
-cohere_key = os.environ["COHERE_KEY"]
+cohere_key = os.environ["COHERE_API_KEY"]
 # init logging
 logging.config.fileConfig("server/logging.ini")
 logger = logging.getLogger(__name__)
@@ -61,6 +65,9 @@ pinecone.init(
     environment=pinecone_env,
 )
 index = pinecone.Index(index_name)
+
+# initialize cohere api key
+co = cohere.Client(cohere_key)
 
 # init metrics
 metric_namespace = os.environ.get("METRIC_NAMESPACE", "")
@@ -156,28 +163,23 @@ async def search(
         if query_type == "rag" or query_type == "ragonly":
             # get query embedding
             start = time.perf_counter()
-            cohere_embedding = get_cohere_embedding(q)
+            # cohere_embedding = get_cohere_embedding(q)
             # embed_response = openai.Embedding.create(
             # input=[q], engine=embedding_model
             # )  # type: ignore
             # embedding = embed_response["data"][0]["embedding"]
-            # embedding = get_voyageai_embeddings(
-            #    [q], model="voyage-01", input_type="query"
-            # )[0]
+            embedding = get_voyageai_embeddings(
+                [q], model="voyage-01", input_type="query"
+            )[0]
             embed_secs = time.perf_counter() - start
 
             # query index
             start = time.perf_counter()
             query_response = index.query(
-                cohere_embedding, top_k=search_limit, include_metadata=True
+                embedding, top_k=search_limit, include_metadata=True
             )
             index_secs = time.perf_counter() - start
 
-            # get prompt
-            texts = [res["metadata"]["text"] for res in query_response["matches"]]
-            prompt_content = rag_prompt_content
-            prompt, n_contexts = get_prompt(rag_prompt_content, q, texts, prompt_limit)
-            role_content = rag_role_content
             search_results = query_response["matches"]
             print("search_results", search_results)
 
@@ -185,6 +187,13 @@ async def search(
             reranked_results = rerank_with_cohere(q, search_results)
             # Use the reranked results
             search_results = reranked_results
+
+            # get prompt
+            texts = [res["metadata"]["text"] for res in search_results]
+            prompt_content = rag_prompt_content
+            prompt, n_contexts = get_prompt(rag_prompt_content, q, texts, prompt_limit)
+            role_content = rag_role_content
+
         else:  # norag
             prompt_content = norag_prompt_content
             prompt = get_norag_prompt(norag_prompt_content, q)

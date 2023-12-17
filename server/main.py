@@ -159,14 +159,14 @@ async def search(
                 embedding, top_k=search_limit, include_metadata=True
             )
             index_secs = time.perf_counter() - start
+            search_results = query_response["matches"]
+            print("search_results", search_results)
 
             # get prompt
-            texts = [res["metadata"]["text"] for res in query_response["matches"]]
+            texts = [res["metadata"]["text"] for res in search_results]
             prompt_content = rag_prompt_content
             prompt, n_contexts = get_prompt(rag_prompt_content, q, texts, prompt_limit)
             role_content = rag_role_content
-            search_results = query_response["matches"]
-            print("search_results", search_results)
         else:  # norag
             prompt_content = norag_prompt_content
             prompt = get_norag_prompt(norag_prompt_content, q)

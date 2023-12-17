@@ -140,8 +140,10 @@ async def search(
     embed_secs = 0.0
     index_secs = 0.0
     # get answer
+
     while True:
         if query_type == "rag" or query_type == "ragonly":
+
             # get query embedding
             start = time.perf_counter()
             # embed_response = openai.Embedding.create(
@@ -176,24 +178,30 @@ async def search(
 
         print("PROMPT", prompt)
         start = time.perf_counter()
-        answer_response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {
-                    "role": "system",
-                    "content": role_content,
-                },
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.0,
-            max_tokens=max_answer_tokens,
-            top_p=1.0,
-            frequency_penalty=0,
-            presence_penalty=0,
-            stop=None,
-        )  # type: ignore
+        try:
+            answer_response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": role_content,
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.0,
+                max_tokens=max_answer_tokens,
+                top_p=1.0,
+                frequency_penalty=0,
+                presence_penalty=0,
+                stop=None,
+            )  # type: ignore
+
+            answer = answer_response["choices"][0]["message"]["content"].strip()
+        except Exception:
+            answer = (
+                "Sorry, we can't provide an answer right now. Please try again later."
+            )
         answer_secs = time.perf_counter() - start
-        answer = answer_response["choices"][0]["message"]["content"].strip()
         if query_type == "rag" and answer == "Sorry, I don't know.":
             query_type = "norag"
         else:

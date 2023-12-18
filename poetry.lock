@@ -198,6 +198,17 @@ files = [
 dev = ["freezegun (>=1.0,<2.0)", "pytest (>=6.0)", "pytest-cov"]
 
 [[package]]
+name = "backoff"
+version = "2.2.1"
+description = "Function decoration for backoff and retry"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "backoff-2.2.1-py3-none-any.whl", hash = "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8"},
+    {file = "backoff-2.2.1.tar.gz", hash = "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba"},
+]
+
+[[package]]
 name = "bandit"
 version = "1.7.5"
 description = "Security oriented static analyser for python code."
@@ -523,6 +534,25 @@ gs = ["google-cloud-storage"]
 s3 = ["boto3"]
 
 [[package]]
+name = "cohere"
+version = "4.39"
+description = "Python SDK for the Cohere API"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "cohere-4.39-py3-none-any.whl", hash = "sha256:7f157b7ac0a70b1dda77dc56c4fc063e8d21efcd2bb13759cd5b6839080405e7"},
+    {file = "cohere-4.39.tar.gz", hash = "sha256:9e94bb1e5b2e2d464738e0ab3c99ed2879c043cccc90ecbeffd124e81867745d"},
+]
+
+[package.dependencies]
+aiohttp = ">=3.0,<4.0"
+backoff = ">=2.0,<3.0"
+fastavro = ">=1.8,<2.0"
+importlib_metadata = ">=6.0,<7.0"
+requests = ">=2.25.0,<3.0.0"
+urllib3 = ">=1.26,<3"
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -773,6 +803,52 @@ all = ["email-validator (>=1.1.1)", "httpx (>=0.23.0)", "itsdangerous (>=1.1.0)"
 dev = ["pre-commit (>=2.17.0,<3.0.0)", "ruff (==0.0.138)", "uvicorn[standard] (>=0.12.0,<0.21.0)"]
 doc = ["mdx-include (>=1.4.1,<2.0.0)", "mkdocs (>=1.1.2,<2.0.0)", "mkdocs-markdownextradata-plugin (>=0.1.7,<0.3.0)", "mkdocs-material (>=8.1.4,<9.0.0)", "pyyaml (>=5.3.1,<7.0.0)", "typer[all] (>=0.6.1,<0.8.0)"]
 test = ["anyio[trio] (>=3.2.1,<4.0.0)", "black (==22.10.0)", "coverage[toml] (>=6.5.0,<8.0)", "databases[sqlite] (>=0.3.2,<0.7.0)", "email-validator (>=1.1.1,<2.0.0)", "flask (>=1.1.2,<3.0.0)", "httpx (>=0.23.0,<0.24.0)", "isort (>=5.0.6,<6.0.0)", "mypy (==0.982)", "orjson (>=3.2.1,<4.0.0)", "passlib[bcrypt] (>=1.7.2,<2.0.0)", "peewee (>=3.13.3,<4.0.0)", "pytest (>=7.1.3,<8.0.0)", "python-jose[cryptography] (>=3.3.0,<4.0.0)", "python-multipart (>=0.0.5,<0.0.6)", "pyyaml (>=5.3.1,<7.0.0)", "ruff (==0.0.138)", "sqlalchemy (>=1.3.18,<1.4.43)", "types-orjson (==3.6.2)", "types-ujson (==5.6.0.0)", "ujson (>=4.0.1,!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0,<6.0.0)"]
+
+[[package]]
+name = "fastavro"
+version = "1.9.1"
+description = "Fast read/write of AVRO files"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "fastavro-1.9.1-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:de181b2e67f1f42f0c15f87ff530dda88cfe2efc91653b6d38d0aaf4c8800bbf"},
+    {file = "fastavro-1.9.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:84616dae53581733aac1161685d35c269922cee79170d8a1f7dbc56c8e2c6a95"},
+    {file = "fastavro-1.9.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eee78b13e118468e6796a97857a02dd2a8076f2946c6ab992a25597ee60a8963"},
+    {file = "fastavro-1.9.1-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:70df5a6428e5c60b08d92a3cf955d2c658e0460059654b0490c908d429bcf332"},
+    {file = "fastavro-1.9.1-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:47f66f8282f7b2b70d4edc1c1853c154a9db14693a20fc1fa78859eb091c6beb"},
+    {file = "fastavro-1.9.1-cp310-cp310-win_amd64.whl", hash = "sha256:b558a789b1a24be3b471a2d430a1583e4e18b09896a27ce80211d40c91d3895a"},
+    {file = "fastavro-1.9.1-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:cd00aa7a7e463538b3930b27ea98270af11de3a6436b658086802964ae53cfc7"},
+    {file = "fastavro-1.9.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3d8037a800914acfd2d17894accfdd9ba96e316bce173e3ac2bc36c9d6f91adb"},
+    {file = "fastavro-1.9.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f5a6d15fd3783165113b8292058f06c555fecb7b0bbc0dfd391dc6f320675157"},
+    {file = "fastavro-1.9.1-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:46e69d9fe30ccba8a1a22c2ed2e88deb4ae1ce42f47495f59bd1cac60c3f3e75"},
+    {file = "fastavro-1.9.1-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:a06ae6b12b4dfe8fa6c84019a949b44067bf5d7fb051f7101a9093dc2c8c7631"},
+    {file = "fastavro-1.9.1-cp311-cp311-win_amd64.whl", hash = "sha256:47f18c4f3f5a945c32d386402cf007f700433fd1b9b6af78eb35ee09a29ba8ad"},
+    {file = "fastavro-1.9.1-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:7ce88e5bc88d3d210dca99b69cffc6a7a0538815e86e806730cd79914ac9c17f"},
+    {file = "fastavro-1.9.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:16ebff73e08bc6437746e36a131f3a025d49b5867f5975bcc4a3e57cafcb3338"},
+    {file = "fastavro-1.9.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2b5ebcf4ea3b50cfb80c7cd363e57daab8c2662b85de9ced838e32b5a46a106f"},
+    {file = "fastavro-1.9.1-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:2d52c69089f6ce7110665149ced29cb68f2f1cd6812b28ebb53b158b53e069f7"},
+    {file = "fastavro-1.9.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:e21c23b7d19df260244ae8fb4470ce27399dc1c0129fa523285e39d8ff7b5ef8"},
+    {file = "fastavro-1.9.1-cp312-cp312-win_amd64.whl", hash = "sha256:28886022b9c5e5175e44aa04ed10d733b7503028092e38e61ecafe006f839362"},
+    {file = "fastavro-1.9.1-cp38-cp38-macosx_11_0_x86_64.whl", hash = "sha256:dfdfb3706646397f1c71e6652c9ca23ed29698c5f1bd20f32903589d3ae62219"},
+    {file = "fastavro-1.9.1-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a9b1edaebef41500028b6bfbef1a46dc2e5b23f8a5dbde8d8c087b290572e5d2"},
+    {file = "fastavro-1.9.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8ff2184d82788ff6d986372e72add561700ccdedea13b649593604d078dbf674"},
+    {file = "fastavro-1.9.1-cp38-cp38-musllinux_1_1_aarch64.whl", hash = "sha256:13ae31bb1b9ee69109e4032946d94ab92c1f1c49194917e64bb7f5923ba4f8fd"},
+    {file = "fastavro-1.9.1-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:a9f549ee83ae4df5bc952552caad2011272d20a9fb0cddd50ff3fa1edd8d11a9"},
+    {file = "fastavro-1.9.1-cp38-cp38-win_amd64.whl", hash = "sha256:b0265fbec0a268baadf3482eb92d0a4f644f68f8dc266a19a0440b7a28987564"},
+    {file = "fastavro-1.9.1-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:0533a430aafe75bc02fe66391361a5f374f08375a89ec93365cb15c016e7f911"},
+    {file = "fastavro-1.9.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8dc30d9fa7592b0a652911466a7898547277e7f054e23f95fc5d0e8b88788174"},
+    {file = "fastavro-1.9.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b786f872d5caa34b8c18f2ed73efd99b8b8e1c404342a4242cf3ad7344bdd46c"},
+    {file = "fastavro-1.9.1-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:9a9a7213d80eb5e47ffb471c089cfbc19ec5b2390b75f6ef2e09e8678c0f7aeb"},
+    {file = "fastavro-1.9.1-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:0b9e9cb05500ed8578ce614a5df4b2b525ded2674320725d405435925addd446"},
+    {file = "fastavro-1.9.1-cp39-cp39-win_amd64.whl", hash = "sha256:abfef36fdd2cdbf3b7e7551f6506b908f24e241eebc2ab14e7ff6862679fd1ef"},
+    {file = "fastavro-1.9.1.tar.gz", hash = "sha256:f37011d66de8ba81b26760db0478009a14c08ebfd34269b3390abfd4616b308f"},
+]
+
+[package.extras]
+codecs = ["cramjam", "lz4", "zstandard"]
+lz4 = ["lz4"]
+snappy = ["cramjam"]
+zstandard = ["zstandard"]
 
 [[package]]
 name = "filelock"
@@ -1182,6 +1258,25 @@ files = [
     {file = "imagesize-1.4.1-py2.py3-none-any.whl", hash = "sha256:0d8d18d08f840c19d0ee7ca1fd82490fdc3729b7ac93f49870406ddde8ef8d8b"},
     {file = "imagesize-1.4.1.tar.gz", hash = "sha256:69150444affb9cb0d5cc5a92b3676f0b2fb7cd9ae39e947a5e11a36b4497cd4a"},
 ]
+
+[[package]]
+name = "importlib-metadata"
+version = "6.11.0"
+description = "Read metadata from Python packages"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "importlib_metadata-6.11.0-py3-none-any.whl", hash = "sha256:f0afba6205ad8f8947c7d338b5342d5db2afbfd82f9cbef7879a9539cc12eb9b"},
+    {file = "importlib_metadata-6.11.0.tar.gz", hash = "sha256:1231cf92d825c9e03cfc4da076a16de6422c863558229ea0b22b675657463443"},
+]
+
+[package.dependencies]
+zipp = ">=0.5"
+
+[package.extras]
+docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-lint"]
+perf = ["ipython"]
+testing = ["flufl.flake8", "importlib-resources (>=1.3)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy (>=0.9.1)", "pytest-perf (>=0.9.2)", "pytest-ruff"]
 
 [[package]]
 name = "iniconfig"
@@ -3717,7 +3812,22 @@ files = [
 idna = ">=2.0"
 multidict = ">=4.0"
 
+[[package]]
+name = "zipp"
+version = "3.17.0"
+description = "Backport of pathlib-compatible object wrapper for zip files"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "zipp-3.17.0-py3-none-any.whl", hash = "sha256:0e923e726174922dce09c53c59ad483ff7bbb8e572e00c7f7c46b88556409f31"},
+    {file = "zipp-3.17.0.tar.gz", hash = "sha256:84e64a1c28cf7e91ed2078bb8cc8c259cb19b76942096c8d7b84947690cabaf0"},
+]
+
+[package.extras]
+docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-lint"]
+testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "7d928673feea89240a51864e2143990c85b32c58bb49f3a9cd1f85de7d3c425c"
+content-hash = "55e28b25a16f491ce9e96668b2187514fd913850befd7e89a973150fc5905177"

@@ -9,6 +9,7 @@ from typing import Awaitable
 from typing import Callable
 from typing import Optional
 
+import cohere
 import boto3  # type: ignore
 import openai
 import pinecone  # type: ignore
@@ -31,10 +32,14 @@ from server.search_utils import log_metrics
 
 # init environment
 load_dotenv()
-pinecone_key = os.environ["PINECONE_KEY"]
+pinecone_key = os.environ["PINECONE_API_KEY"]
 pinecone_env = os.environ["PINECONE_ENV"]
-openai_key = os.environ["OPENAI_KEY"]
+openai_key = os.environ["OPENAI_API_KEY"]
 voyageai_key = os.environ["VOYAGE_API_KEY"]
+cohere_key = os.environ["COHERE_API_KEY"]
+
+# initialize cohere api key
+co = cohere.Client(cohere_key)
 
 # init logging
 logging.config.fileConfig("server/logging.ini")
@@ -129,6 +134,18 @@ async def log_exceptions_middleware(
         )
         return Response(status_code=500, content="Internal Server Error")
 
+def rerank_with_cohere(query: str, search_results: list) -> list:
+    """Rerank search results using Cohere."""
+    print(search_results)
+    co = cohere.Client(cohere_key)
+    reranked_results = co.rerank(
+        model="rerank-english-v2.0",
+        query=query,
+        documents=search_results,
+        top_n=search_limit,
+    )
+    # print(reranked_results)
+    return reranked_results
 
 @app.get("/search")
 async def search(
@@ -164,6 +181,11 @@ async def search(
             search_results = query_response["matches"]
             print("search_results", search_results)
 
+            # Rerank using Cohere
+            reranked_results = rerank_with_cohere(q, search_results)
+            # Use the reranked results
+            search_results = reranked_results
+
             # get prompt
             texts = [res["metadata"]["text"] for res in search_results]
             prompt_content = rag_prompt_content
@@ -179,6 +201,7 @@ async def search(
         print("PROMPT", prompt)
         start = time.perf_counter()
         try:
+
             answer_response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[

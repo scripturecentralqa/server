@@ -10,7 +10,7 @@ from typing import Callable
 from typing import Optional
 
 import boto3  # type: ignore
-import cohere # type: ignore
+import cohere  # type: ignore
 import openai
 import pinecone  # type: ignore
 import voyageai  # type: ignore

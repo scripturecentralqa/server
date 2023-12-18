@@ -145,3 +145,35 @@ def log_metrics(
         botocore.exceptions.ParamValidationError,
     ) as error:
         logger.error("cloudwatch", extra={"error": error})
+
+
+def rerank_with_cohere(
+    query: str, search_results: list[Any], co: Any, search_limit: int
+) -> list[Any]:
+    """Rerank search results using Cohere.
+
+    :param query: The user query.
+    :param search_results: Initial search results.
+    :return: Reranked search results.
+    """
+    cohere_results = [
+        search_result["metadata"]["text"] for search_result in search_results
+    ]
+
+    # print('SEARCH: ', search_results)
+    reranked_results = co.rerank(
+        model="rerank-english-v2.0",
+        query=query,
+        documents=cohere_results,
+        top_n=search_limit,
+    )
+    # print('CO-RANK: ', reranked_results)
+    new_results = []
+
+    for _idx, reranked_result in enumerate(reranked_results):
+        for search_result in search_results:
+            if search_result["metadata"]["text"] == reranked_result.document["text"]:
+                new_results.append(search_result)
+                break
+    # print('COHERE: ', new_results)
+    return new_results

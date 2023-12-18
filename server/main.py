@@ -9,8 +9,8 @@ from typing import Awaitable
 from typing import Callable
 from typing import Optional
 
-import cohere
 import boto3  # type: ignore
+import cohere # type: ignore
 import openai
 import pinecone  # type: ignore
 import voyageai  # type: ignore
@@ -28,6 +28,7 @@ from server.search_utils import get_norag_prompt
 from server.search_utils import get_prompt
 from server.search_utils import get_url
 from server.search_utils import log_metrics
+from server.search_utils import rerank_with_cohere
 
 
 # init environment
@@ -134,18 +135,6 @@ async def log_exceptions_middleware(
         )
         return Response(status_code=500, content="Internal Server Error")
 
-def rerank_with_cohere(query: str, search_results: list) -> list:
-    """Rerank search results using Cohere."""
-    print(search_results)
-    co = cohere.Client(cohere_key)
-    reranked_results = co.rerank(
-        model="rerank-english-v2.0",
-        query=query,
-        documents=search_results,
-        top_n=search_limit,
-    )
-    # print(reranked_results)
-    return reranked_results
 
 @app.get("/search")
 async def search(
@@ -179,10 +168,10 @@ async def search(
             )
             index_secs = time.perf_counter() - start
             search_results = query_response["matches"]
-            print("search_results", search_results)
+            # print("search_results", search_results)
 
             # Rerank using Cohere
-            reranked_results = rerank_with_cohere(q, search_results)
+            reranked_results = rerank_with_cohere(q, search_results, co, search_limit)
             # Use the reranked results
             search_results = reranked_results
 

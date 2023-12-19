@@ -173,20 +173,14 @@ async def search(
             doc_embeddings = np.array(
                 all_embeddings[:-1]
             )  # search result embeddings as a numpy array
+            doc_embeddings = doc_embeddings
             query_embedding = np.array(
                 all_embeddings[-1]
             )  # query embedding as a numpy array
 
             mmr_result = maximal_marginal_relevance(
-                query_embedding, doc_embeddings, 0.7, len(search_results)
+                query_embedding, doc_embeddings.tolist(), 0.7, len(search_results)
             )
-            print("This is MMR")
-            print(mmr_result)
-
-            print("------------------------------------------------")
-
-            print("This is search result")
-            print(search_results)
 
             new_results = []
             for ix in mmr_result:

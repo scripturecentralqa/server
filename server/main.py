@@ -10,6 +10,7 @@ from typing import Callable
 from typing import Optional
 
 import boto3  # type: ignore
+import numpy as np
 import openai
 import pinecone  # type: ignore
 import voyageai  # type: ignore
@@ -17,6 +18,7 @@ from dotenv import load_dotenv
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
 from fastapi import Query
+from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
@@ -163,6 +165,22 @@ async def search(
             index_secs = time.perf_counter() - start
             search_results = query_response["matches"]
             print("search_results", search_results)
+            all_texts = [res["metadata"]["text"] for res in search_results] + [
+                q
+            ]  # all search result texts plus the query
+            embed_response = openai.Embedding.create(input=all_texts, engine="text-embedding-ada-002")  # type: ignore
+            all_embeddings = [data["embedding"] for data in embed_response["data"]]
+            doc_embeddings = np.array(
+                all_embeddings[:-1]
+            )  # search result embeddings as a numpy array
+            query_embedding = np.array(
+                all_embeddings[-1]
+            )  # query embedding as a numpy array
+
+            mmr_result = maximal_marginal_relevance(
+                query_embedding, doc_embeddings, 0.7, len(search_results)
+            )
+            search_results = mmr_result
 
             # get prompt
             texts = [res["metadata"]["text"] for res in search_results]

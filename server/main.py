@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
 from fastapi import Query
+from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
@@ -28,7 +29,6 @@ from server.search_utils import get_norag_prompt
 from server.search_utils import get_prompt
 from server.search_utils import get_url
 from server.search_utils import log_metrics
-from server.search_utils import maximal_marginal_relevance
 
 
 # init environment

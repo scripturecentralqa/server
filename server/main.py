@@ -180,7 +180,18 @@ async def search(
             mmr_result = maximal_marginal_relevance(
                 query_embedding, doc_embeddings, 0.7, len(search_results)
             )
-            search_results = mmr_result
+            print("This is MMR")
+            print(mmr_result)
+
+            print("------------------------------------------------")
+
+            print("This is search result")
+            print(search_results)
+
+            new_results = []
+            for ix in mmr_result:
+                new_results.append(search_results[ix])
+            search_results = new_results
 
             # get prompt
             texts = [res["metadata"]["text"] for res in search_results]

@@ -22,7 +22,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from voyageai import get_embeddings as get_voyageai_embeddings
 
-from server.search_utils import fix_citations
+from server.search_utils import fix_answer
 from server.search_utils import get_norag_prompt
 from server.search_utils import get_prompt
 from server.search_utils import get_url
@@ -31,9 +31,9 @@ from server.search_utils import log_metrics
 
 # init environment
 load_dotenv()
-pinecone_key = os.environ["PINECONE_KEY"]
+pinecone_key = os.environ["PINECONE_API_KEY"]
 pinecone_env = os.environ["PINECONE_ENV"]
-openai_key = os.environ["OPENAI_KEY"]
+openai_key = os.environ["OPENAI_API_KEY"]
 voyageai_key = os.environ["VOYAGE_API_KEY"]
 
 # init logging
@@ -205,7 +205,7 @@ async def search(
         if query_type == "rag" and answer == "Sorry, I don't know.":
             query_type = "norag"
         else:
-            answer = fix_citations(answer)
+            answer = fix_answer(answer)
             break
 
     # create response

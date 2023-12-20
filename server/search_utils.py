@@ -76,14 +76,22 @@ def get_norag_prompt(prompt: str, query: str) -> str:
     """Get prompt for query."""
     return prompt + f"\n\nQuestion: {query}\n\nAnswer:"
 
+# def fix_citations(answer: str) -> str:
+#     """Fix citation references in the answer."""
+#     # replace [\d{1,2}] with [^\d{1,2}]
+#     answer = re.sub(r"\[(\d{1,2})\]", r"[^\1]", answer)
+#     # replace [^context \d{1,2}] with [^\d{1,2}]
+#     answer = re.sub(r"\[\^context (\d{1,2})\]", r"[^\1]", answer)
+#     return answer
 
-def fix_citations(answer: str) -> str:
-    """Fix citation references in the answer."""
-    # replace [\d{1,2}] with [^\d{1,2}]
-    answer = re.sub(r"\[(\d{1,2})\]", r"[^\1]", answer)
-    # replace [^context \d{1,2}] with [^\d{1,2}]
-    answer = re.sub(r"\[\^context (\d{1,2})\]", r"[^\1]", answer)
-    return answer
+def fix_answer(answer: str) -> str:
+  """Fix the answer if it's too long."""
+  if len(answer) >= 400:
+      sentences = answer.split(".", "[", "]", "(", ")", "!", '"', "'", ":", ";")
+      if len(sentences) > 1:
+          answer = sentences[0] + "."
+  return answer
+
 
 
 def log_metrics(
@@ -145,3 +153,4 @@ def log_metrics(
         botocore.exceptions.ParamValidationError,
     ) as error:
         logger.error("cloudwatch", extra={"error": error})
+        

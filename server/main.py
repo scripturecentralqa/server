@@ -20,6 +20,7 @@ from fastapi import Query
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
+from upstash_redis import Redis
 from voyageai import get_embeddings as get_voyageai_embeddings
 
 from server.search_utils import fix_citations
@@ -27,6 +28,9 @@ from server.search_utils import get_norag_prompt
 from server.search_utils import get_prompt
 from server.search_utils import get_url
 from server.search_utils import log_metrics
+
+
+redis = Redis.from_env()
 
 
 # init environment

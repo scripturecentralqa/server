@@ -33,9 +33,9 @@ from server.search_utils import log_metrics
 
 # init environment
 load_dotenv()
-pinecone_key = os.environ["PINECONE_KEY"]
+pinecone_key = os.environ["PINECONE_API_KEY"]
 pinecone_env = os.environ["PINECONE_ENV"]
-openai_key = os.environ["OPENAI_KEY"]
+openai_key = os.environ["OPENAI_API_KEY"]
 voyageai_key = os.environ["VOYAGE_API_KEY"]
 
 # init logging
@@ -142,24 +142,24 @@ async def search(
     embed_secs = 0.0
     index_secs = 0.0
     # get answer
-    # query_prompt = f"Please write a paragraph to answer the question \nQuestion: {q}"
-    # gpt_response = openai.ChatCompletion.create(
-    #     model="gpt-3.5-turbo",
-    #     messages=[
-    #         {
-    #             "role": "system",
-    #             "content": rag_role_content,
-    #         },
-    #         {"role": "user", "content": query_prompt},
-    #     ],
-    #     temperature=0.0,
-    #     max_tokens=max_answer_tokens,
-    #     top_p=1.0,
-    #     frequency_penalty=0,
-    #     presence_penalty=0,
-    #     stop=None,
-    # )  # type: ignore
-    # q = gpt_response["choices"][0]["message"]["content"].strip()
+    query_prompt = f"Please write a paragraph to answer the question \nQuestion: {q}"
+    gpt_response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": rag_role_content,
+            },
+            {"role": "user", "content": query_prompt},
+        ],
+        temperature=0.0,
+        max_tokens=max_answer_tokens,
+        top_p=1.0,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None,
+    )  # type: ignore
+    q = gpt_response["choices"][0]["message"]["content"].strip()
 
     while True:
         if query_type == "rag" or query_type == "ragonly":

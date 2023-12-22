@@ -172,8 +172,12 @@ def rerank_with_cohere(
 
     for reranked_result in reranked_results:
         # print('COHERE', reranked_result)
-        search_result = search_results[reranked_result.index]
-        search_result.score = reranked_result.relevance_score
-        new_results.append(search_result)
+        # search_result = search_results[reranked_result.index]
+        # search_result.score = reranked_result.relevance_score
+        # new_results.append(search_result)
+        for search_result in search_results:
+            if search_result["metadata"]["text"] == reranked_result.document["text"]:
+                new_results.append(search_result)
+                break
     # print('NEW_RESULTS: ', new_results)
     return new_results

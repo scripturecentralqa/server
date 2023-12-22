@@ -160,7 +160,7 @@ def rerank_with_cohere(
         search_result["metadata"]["text"] for search_result in search_results
     ]
 
-    # print('SEARCH: ', search_results)
+    # print('COHERE_RESULTS: ', cohere_results)
     reranked_results = co.rerank(
         model="rerank-english-v2.0",
         query=query,
@@ -170,10 +170,10 @@ def rerank_with_cohere(
     # print('CO-RANK: ', reranked_results)
     new_results = []
 
-    for _idx, reranked_result in enumerate(reranked_results):
-        for search_result in search_results:
-            if search_result["metadata"]["text"] == reranked_result.document["text"]:
-                new_results.append(search_result)
-                break
-    # print('COHERE: ', new_results)
+    for reranked_result in reranked_results:
+        # print('COHERE', reranked_result)
+        search_result = search_results[reranked_result.index]
+        search_result.score = reranked_result.relevance_score
+        new_results.append(search_result)
+    # print('NEW_RESULTS: ', new_results)
     return new_results

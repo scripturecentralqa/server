@@ -21,7 +21,6 @@ from fastapi import Query
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
-from voyageai import get_embeddings as get_voyageai_embeddings
 
 from server.search_utils import fix_citations
 from server.search_utils import get_norag_prompt
@@ -29,6 +28,9 @@ from server.search_utils import get_prompt
 from server.search_utils import get_url
 from server.search_utils import log_metrics
 from server.search_utils import rerank_with_cohere
+
+
+# from voyageai import get_embeddings as get_voyageai_embeddings
 
 
 # init environment
@@ -52,7 +54,7 @@ app = FastAPI(debug=debug)
 
 # init openai
 openai.api_key = openai_key
-# embedding_model = "text-embedding-ada-002"
+embedding_model = "text-embedding-ada-002"
 prompt_limit = 10000
 
 # init voyageai
@@ -152,13 +154,13 @@ async def search(
 
             # get query embedding
             start = time.perf_counter()
-            # embed_response = openai.Embedding.create(
-            #     input=[q], engine=embedding_model
-            # )  # type: ignore
-            # embedding = embed_response["data"][0]["embedding"]
-            embedding = get_voyageai_embeddings(
-                [q], model="voyage-01", input_type="query"
-            )[0]
+            embed_response = openai.Embedding.create(
+                input=[q], engine=embedding_model
+            )  # type: ignore
+            embedding = embed_response["data"][0]["embedding"]
+            # embedding = get_voyageai_embeddings(
+            #     [q], model="voyage-01", input_type="query"
+            # )[0]
             embed_secs = time.perf_counter() - start
 
             # query index

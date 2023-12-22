@@ -20,13 +20,15 @@ from fastapi import Query
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
-from voyageai import get_embeddings as get_voyageai_embeddings
 
 from server.search_utils import fix_citations
 from server.search_utils import get_norag_prompt
 from server.search_utils import get_prompt
 from server.search_utils import get_url
 from server.search_utils import log_metrics
+
+
+# from voyageai import get_embeddings as get_voyageai_embeddings
 
 
 # init environment
@@ -46,8 +48,8 @@ app = FastAPI(debug=debug)
 
 # init openai
 openai.api_key = openai_key
-# embedding_model = "text-embedding-ada-002"
-prompt_limit = 10000
+embedding_model = "text-embedding-ada-002"
+prompt_limit = 1000
 
 # init voyageai
 voyageai.api_key = voyageai_key
@@ -140,19 +142,37 @@ async def search(
     embed_secs = 0.0
     index_secs = 0.0
     # get answer
+    # query_prompt = f"Please write a paragraph to answer the question \nQuestion: {q}"
+    # gpt_response = openai.ChatCompletion.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=[
+    #         {
+    #             "role": "system",
+    #             "content": rag_role_content,
+    #         },
+    #         {"role": "user", "content": query_prompt},
+    #     ],
+    #     temperature=0.0,
+    #     max_tokens=max_answer_tokens,
+    #     top_p=1.0,
+    #     frequency_penalty=0,
+    #     presence_penalty=0,
+    #     stop=None,
+    # )  # type: ignore
+    # q = gpt_response["choices"][0]["message"]["content"].strip()
 
     while True:
         if query_type == "rag" or query_type == "ragonly":
 
             # get query embedding
             start = time.perf_counter()
-            # embed_response = openai.Embedding.create(
-            #     input=[q], engine=embedding_model
-            # )  # type: ignore
-            # embedding = embed_response["data"][0]["embedding"]
-            embedding = get_voyageai_embeddings(
-                [q], model="voyage-01", input_type="query"
-            )[0]
+            embed_response = openai.Embedding.create(
+                input=[q], engine=embedding_model
+            )  # type: ignore
+            embedding = embed_response["data"][0]["embedding"]
+            # embedding = get_voyageai_embeddings(
+            #     [q], model="voyage-01", input_type="query"
+            # )[0]
             embed_secs = time.perf_counter() - start
 
             # query index

@@ -141,7 +141,8 @@ async def search(
     """Search."""
     embed_secs = 0.0
     index_secs = 0.0
-    # get answer
+
+    # get new query using HyDE approach
     query_prompt = f"Please write a paragraph to answer the question \nQuestion: {q}"
     gpt_response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",

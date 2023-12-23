@@ -39,9 +39,8 @@ Install pre-commit as a git hook: `poetry run pre-commit install`
 create a `.env` file with the following variables:
 
 ```console
-OPENAI_KEY=your_openai_api_key (found on API keys page)
-OPENAI_ORG=your_openai_org (found on Settings page)
-PINECONE_KEY=your_pinecone_api_key (found on API keys page)
+OPENAI_API_KEY=your_openai_api_key (found on API keys page)
+PINECONE_API_KEY=your_pinecone_api_key (found on API keys page)
 PINECONE_ENV=your_pinecone_environment_name (found on API keys page)
 ```
 

@@ -10,6 +10,7 @@ from typing import Callable
 from typing import Optional
 
 import boto3  # type: ignore
+import numpy as np
 import openai
 import pinecone  # type: ignore
 import voyageai  # type: ignore
@@ -17,6 +18,7 @@ from dotenv import load_dotenv
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
 from fastapi import Query
+from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
@@ -50,6 +52,7 @@ app = FastAPI(debug=debug)
 openai.api_key = openai_key
 embedding_model = "text-embedding-ada-002"
 prompt_limit = 10000
+similarity_threshold = 0.86
 
 # init voyageai
 voyageai.api_key = voyageai_key
@@ -160,7 +163,7 @@ async def search(
         presence_penalty=0,
         stop=None,
     )  # type: ignore
-    q = gpt_response["choices"][0]["message"]["content"].strip()
+    hyde_query = gpt_response["choices"][0]["message"]["content"].strip()
 
     while True:
         if query_type == "rag" or query_type == "ragonly":
@@ -168,11 +171,11 @@ async def search(
             # get query embedding
             start = time.perf_counter()
             embed_response = openai.Embedding.create(
-                input=[q], engine=embedding_model
+                input=[hyde_query], engine=embedding_model
             )  # type: ignore
             embedding = embed_response["data"][0]["embedding"]
             # embedding = get_voyageai_embeddings(
-            #     [q], model="voyage-01", input_type="query"
+            #     [hyde_query], model="voyage-01", input_type="query"
             # )[0]
             embed_secs = time.perf_counter() - start
 
@@ -183,7 +186,31 @@ async def search(
             )
             index_secs = time.perf_counter() - start
             search_results = query_response["matches"]
+            # only keep results with similarity above threshold
+            search_results = [
+                res for res in search_results if res["score"] >= similarity_threshold
+            ]
             print("search_results", search_results)
+
+            # maximal marginal relevance
+            all_texts = [res["metadata"]["text"] for res in search_results] + [
+                q
+            ]  # all result texts plus the query
+            embed_response = openai.Embedding.create(input=all_texts, engine="text-embedding-ada-002")  # type: ignore
+            all_embeddings = [data["embedding"] for data in embed_response["data"]]
+            doc_embeddings = np.array(
+                all_embeddings[:-1]
+            )  # search result embeddings as a numpy array
+            query_embedding = np.array(
+                all_embeddings[-1]
+            )  # query embedding as a numpy array
+            mmr_result = maximal_marginal_relevance(
+                query_embedding, doc_embeddings.tolist(), 0.7, len(search_results)
+            )
+            new_results = []
+            for ix in mmr_result:
+                new_results.append(search_results[ix])
+            search_results = new_results
 
             # get prompt
             texts = [res["metadata"]["text"] for res in search_results]

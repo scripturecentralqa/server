@@ -167,7 +167,6 @@ async def search(
 
     while True:
         if query_type == "rag" or query_type == "ragonly":
-
             # get query embedding
             start = time.perf_counter()
             embed_response = openai.Embedding.create(

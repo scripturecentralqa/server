@@ -13,6 +13,7 @@ from typing import Callable
 from typing import Optional
 
 import boto3  # type: ignore
+import numpy as np
 import openai
 import pinecone  # type: ignore
 import requests
@@ -25,6 +26,7 @@ from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi.responses import StreamingResponse
+from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
@@ -35,9 +37,6 @@ from server.search_utils import get_prompt
 from server.search_utils import get_url
 from server.search_utils import log_metrics
 
-
-# from upstash_redis import Redis
-# from voyageai import get_embeddings as get_voyageai_embeddings
 
 
 # init environment
@@ -61,6 +60,7 @@ app = FastAPI(debug=debug)
 openai.api_key = openai_key
 embedding_model = "text-embedding-ada-002"
 prompt_limit = 10000
+similarity_threshold = 0.86
 
 # init voyageai
 voyageai.api_key = voyageai_key
@@ -181,6 +181,73 @@ async def search(
         if query_type == "rag" or query_type == "ragonly":
 
             search_results, embed_secs, index_secs = get_search_results(q)
+
+    # get new query using HyDE approach
+    query_prompt = f"Please write a paragraph to answer the question \nQuestion: {q}"
+    gpt_response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": rag_role_content,
+            },
+            {"role": "user", "content": query_prompt},
+        ],
+        temperature=0.0,
+        max_tokens=max_answer_tokens,
+        top_p=1.0,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None,
+    )  # type: ignore
+    hyde_query = gpt_response["choices"][0]["message"]["content"].strip()
+
+    while True:
+        if query_type == "rag" or query_type == "ragonly":
+            # get query embedding
+            start = time.perf_counter()
+            embed_response = openai.Embedding.create(
+                input=[hyde_query], engine=embedding_model
+            )  # type: ignore
+            embedding = embed_response["data"][0]["embedding"]
+            # embedding = get_voyageai_embeddings(
+            #     [hyde_query], model="voyage-01", input_type="query"
+            # )[0]
+            embed_secs = time.perf_counter() - start
+
+            # query index
+            start = time.perf_counter()
+            query_response = index.query(
+                embedding, top_k=search_limit, include_metadata=True
+            )
+            index_secs = time.perf_counter() - start
+            search_results = query_response["matches"]
+            # only keep results with similarity above threshold
+            search_results = [
+                res for res in search_results if res["score"] >= similarity_threshold
+            ]
+            print("search_results", search_results)
+
+
+            # maximal marginal relevance
+            all_texts = [res["metadata"]["text"] for res in search_results] + [
+                q
+            ]  # all result texts plus the query
+            embed_response = openai.Embedding.create(input=all_texts, engine="text-embedding-ada-002")  # type: ignore
+            all_embeddings = [data["embedding"] for data in embed_response["data"]]
+            doc_embeddings = np.array(
+                all_embeddings[:-1]
+            )  # search result embeddings as a numpy array
+            query_embedding = np.array(
+                all_embeddings[-1]
+            )  # query embedding as a numpy array
+            mmr_result = maximal_marginal_relevance(
+                query_embedding, doc_embeddings.tolist(), 0.7, len(search_results)
+            )
+            new_results = []
+            for ix in mmr_result:
+                new_results.append(search_results[ix])
+            search_results = new_results
 
             # get prompt
             texts = [res["metadata"]["text"] for res in search_results]

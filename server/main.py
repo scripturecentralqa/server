@@ -57,7 +57,7 @@ app = FastAPI(debug=debug)
 # init openai
 openai.api_key = openai_key
 embedding_model = "text-embedding-ada-002"
-prompt_limit = 10000
+prompt_limit = 5000
 similarity_threshold = 0.86
 
 # init voyageai

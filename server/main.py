@@ -1,7 +1,10 @@
 """Server."""
+import json
 import logging.config
 import os
 import random
+import secrets
+import string
 import time
 import traceback
 from enum import IntEnum
@@ -12,16 +15,19 @@ from typing import Optional
 import boto3  # type: ignore
 import openai
 import pinecone  # type: ignore
+import requests
 import voyageai  # type: ignore
 from dotenv import load_dotenv
+
+# from fastapi import Depends
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
+from fastapi import HTTPException
 from fastapi import Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
-from upstash_redis import Redis
-from voyageai import get_embeddings as get_voyageai_embeddings
 
 from server.search_utils import fix_citations
 from server.search_utils import get_norag_prompt
@@ -30,16 +36,19 @@ from server.search_utils import get_url
 from server.search_utils import log_metrics
 
 
-redis = Redis.from_env()
+# from upstash_redis import Redis
+# from voyageai import get_embeddings as get_voyageai_embeddings
 
 
 # init environment
 load_dotenv()
-pinecone_key = os.environ["PINECONE_KEY"]
+pinecone_key = os.environ["PINECONE_API_KEY"]
 pinecone_env = os.environ["PINECONE_ENV"]
-openai_key = os.environ["OPENAI_KEY"]
+openai_key = os.environ["OPENAI_API_KEY"]
 voyageai_key = os.environ["VOYAGE_API_KEY"]
-
+upstash_redis_url = os.environ["UPSTASH_REDIS_REST_URL"]
+upstash_redis_token = os.environ["UPSTASH_REDIS_REST_TOKEN"]
+# redis = Redis.from_env()
 # init logging
 logging.config.fileConfig("server/logging.ini")
 logger = logging.getLogger(__name__)
@@ -50,7 +59,7 @@ app = FastAPI(debug=debug)
 
 # init openai
 openai.api_key = openai_key
-# embedding_model = "text-embedding-ada-002"
+embedding_model = "text-embedding-ada-002"
 prompt_limit = 10000
 
 # init voyageai
@@ -134,6 +143,28 @@ async def log_exceptions_middleware(
         return Response(status_code=500, content="Internal Server Error")
 
 
+def get_search_results(q):
+    """Get the search results."""
+    # get query embedding
+    start = time.perf_counter()
+    embed_response = openai.Embedding.create(
+        input=[q], engine=embedding_model
+    )  # type: ignore
+    embedding = embed_response["data"][0]["embedding"]
+    # embedding = get_voyageai_embeddings(
+    #     [q], model="voyage-01", input_type="query"
+    # )[0]
+    embed_secs = time.perf_counter() - start
+
+    # query index
+    start = time.perf_counter()
+    query_response = index.query(embedding, top_k=search_limit, include_metadata=True)
+    index_secs = time.perf_counter() - start
+    search_results = query_response["matches"]
+    print("search_results", search_results)
+    return search_results, embed_secs, index_secs
+
+
 @app.get("/search")
 async def search(
     q: str = Query(max_length=100),
@@ -143,30 +174,13 @@ async def search(
     """Search."""
     embed_secs = 0.0
     index_secs = 0.0
+
     # get answer
 
     while True:
         if query_type == "rag" or query_type == "ragonly":
 
-            # get query embedding
-            start = time.perf_counter()
-            # embed_response = openai.Embedding.create(
-            #     input=[q], engine=embedding_model
-            # )  # type: ignore
-            # embedding = embed_response["data"][0]["embedding"]
-            embedding = get_voyageai_embeddings(
-                [q], model="voyage-01", input_type="query"
-            )[0]
-            embed_secs = time.perf_counter() - start
-
-            # query index
-            start = time.perf_counter()
-            query_response = index.query(
-                embedding, top_k=search_limit, include_metadata=True
-            )
-            index_secs = time.perf_counter() - start
-            search_results = query_response["matches"]
-            print("search_results", search_results)
+            search_results, embed_secs, index_secs = get_search_results(q)
 
             # get prompt
             texts = [res["metadata"]["text"] for res in search_results]
@@ -253,6 +267,102 @@ async def search(
             len(answer),
         )
     return response
+
+
+# generate a random string
+def generate_random_string(length=10):
+    """Generate a random key."""
+    return "".join(
+        secrets.choices(string.ascii_letters + string.digits, k=length)
+        for _ in range(length)
+    )
+
+
+@app.get("/search_results")
+async def search_results(q: str = Query(max_length=100)):
+    """New endpoint for fetching search results."""
+    # Get search results
+    results, embed_secs, index_secs = get_search_results(q)
+    texts = [res["metadata"]["text"] for res in results]
+    # prompt_content = rag_prompt_content
+    prompt, n_contexts = get_prompt(rag_prompt_content, q, texts, prompt_limit)
+    # Generate a random key
+    key = generate_random_string()
+    # Save results to Upstash Redis
+    upstash_redis_set_url = f"{upstash_redis_url}/SET/{key}"
+    headers = {"Authorization": f"Bearer {upstash_redis_token}"}
+    requests.post(upstash_redis_set_url, data=prompt, headers=headers, timeout=5)
+    # Return the key to the client
+    return {
+        "key": key,
+        "results": [
+            SearchResult(
+                id=res["id"],
+                index=ix + 1,
+                score=res["score"],
+                title=res["metadata"]["title"],
+                text=res["metadata"]["text"],
+                url=get_url(res["metadata"]),
+            )
+            for ix, res in enumerate(results)
+        ],
+    }
+
+
+# New endpoint to stream search results based on a key
+@app.get("/stream_answer")
+async def stream_answer(key: str = Query(max_length=100)):
+    """New endpoint for streaming answer."""
+    # Get results from Upstash Redis
+    upstash_redis_get_url = f"{upstash_redis_url}/GET/{key}"
+    headers = {"Authorization": f"Bearer {upstash_redis_token}"}
+    response = requests.get(upstash_redis_get_url, headers=headers, timeout=5)
+
+    # Check if the key exists in Upstash Redis
+    if response.status_code != 200:
+        raise HTTPException(status_code=404, detail="Key not found")
+    prompt = json.loads(response.content)["result"]
+    # Use GPT-3.5 to generate a more detailed answer
+    # get prompt
+    role_content = rag_role_content
+
+    # Stream the GPT-3.5 response to the client
+
+    def stream_openai_response():
+        """Call openai."""
+        try:
+            answer_response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": role_content,
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                stream=True,
+                temperature=0.0,
+                max_tokens=max_answer_tokens,
+                top_p=1.0,
+                frequency_penalty=0,
+                presence_penalty=0,
+                stop=None,
+            )  # type: ignore
+
+        except Exception:
+            return "Sorry, we can't provide an answer right now. Please try again later."  # noqa
+        try:
+            for chunk in answer_response:
+                current_content = chunk["choices"][0]["delta"].get("content", "")
+                yield current_content
+        except Exception as e:
+            print("OpenAI Response (Streaming) Error: " + str(e))
+            raise HTTPException(
+                503,
+                detail=f"Sorry, we can't provide an answer right now. Please try again later.{e}",
+            ) from e
+
+    return StreamingResponse(stream_openai_response(), media_type="text/event-stream")
 
 
 class RatingScore(IntEnum):

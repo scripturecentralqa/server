@@ -196,7 +196,7 @@ def get_search_results(q: str) -> tuple[list[dict[str, Any]], float, float, floa
 
     # re-order search results for maximal marginal relevance
     all_texts = [res["metadata"]["text"] for res in search_results] + [
-        hyde_query
+        q  # hyde_query
     ]  # all result texts plus the query
     embed_response = openai.Embedding.create(input=all_texts, engine="text-embedding-ada-002")  # type: ignore
     all_embeddings = [data["embedding"] for data in embed_response["data"]]

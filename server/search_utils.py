@@ -91,6 +91,7 @@ def log_metrics(
     metric_namespace: str,
     metric_name: str,
     query_type: str,
+    hyde_secs: float,
     embed_secs: float,
     index_secs: float,
     answer_secs: float,
@@ -103,6 +104,11 @@ def log_metrics(
         cloudwatch.put_metric_data(
             Namespace=metric_namespace,
             MetricData=[
+                {
+                    "MetricName": f"{metric_name}_{query_type}_hyde_seconds",
+                    "Value": hyde_secs,
+                    "Unit": "Seconds",
+                },
                 {
                     "MetricName": f"{metric_name}_{query_type}_embed_seconds",
                     "Value": embed_secs,

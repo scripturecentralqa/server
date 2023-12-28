@@ -24,6 +24,7 @@ from fastapi import BackgroundTasks
 from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from pydantic import BaseModel
@@ -53,6 +54,13 @@ logger = logging.getLogger(__name__)
 # init fastapi
 debug = os.environ.get("DEBUG", "false").lower() == "true"
 app = FastAPI(debug=debug)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # init openai
 openai.api_key = openai_key

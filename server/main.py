@@ -1,5 +1,4 @@
 """Server."""
-import json
 import logging.config
 import os
 import random
@@ -16,7 +15,6 @@ import boto3  # type: ignore
 import numpy as np
 import openai
 import pinecone  # type: ignore
-import requests
 
 # import voyageai  # type: ignore
 from dotenv import load_dotenv
@@ -30,6 +28,7 @@ from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import Response
+from upstash_redis import Redis
 
 from server.search_utils import fix_citations
 from server.search_utils import get_norag_prompt
@@ -44,9 +43,10 @@ pinecone_key = os.environ["PINECONE_API_KEY"]
 pinecone_env = os.environ["PINECONE_ENV"]
 openai_key = os.environ["OPENAI_API_KEY"]
 # voyageai_key = os.environ["VOYAGE_API_KEY"]
-upstash_redis_url = os.environ["UPSTASH_REDIS_REST_URL"]
-upstash_redis_token = os.environ["UPSTASH_REDIS_REST_TOKEN"]
-# redis = Redis.from_env()
+# init redis
+# upstash_redis_url = os.environ["UPSTASH_REDIS_REST_URL"]
+# upstash_redis_token = os.environ["UPSTASH_REDIS_REST_TOKEN"]
+redis = Redis.from_env()
 # init logging
 logging.config.fileConfig("server/logging.ini")
 logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ cloudwatch = boto3.client("cloudwatch") if metric_namespace else None
 
 # other constants
 search_limit = 20
-max_answer_tokens = 512
+max_answer_tokens = 1024
 rag_role_content = "You are an apostle of Jesus Christ."
 # role_content = "You are an apostle of the Church of Jesus Christ of Latter-day Saints"
 rag_prompt_content = (
@@ -305,7 +305,7 @@ async def search(
         extra={
             "role": role_content,
             "prefix": prompt_content,
-            "response": response.dict(),
+            "response": response.model_dump(),
         },
     )
     if cloudwatch:
@@ -348,9 +348,8 @@ async def search_results(
     # Generate a random key
     key = generate_random_string()
     # Save results to Upstash Redis
-    upstash_redis_set_url = f"{upstash_redis_url}/SET/{key}"
-    headers = {"Authorization": f"Bearer {upstash_redis_token}"}
-    requests.post(upstash_redis_set_url, data=prompt, headers=headers, timeout=5)
+    redis.set(key, prompt)
+
     # Return the key to the client
     response = SearchResultsResponse(
         key=key,
@@ -388,17 +387,8 @@ async def search_results(
 @app.get("/stream_answer")
 async def stream_answer(key: str = Query(max_length=100)) -> StreamingResponse:
     """New endpoint for streaming answer."""
-    # Get results from Upstash Redis
-    upstash_redis_get_url = f"{upstash_redis_url}/GET/{key}"
-    headers = {"Authorization": f"Bearer {upstash_redis_token}"}
-    response = requests.get(upstash_redis_get_url, headers=headers, timeout=5)
-
-    # Check if the key exists in Upstash Redis
-    if response.status_code != 200:
-        raise HTTPException(status_code=404, detail="Key not found")
-    # get prompt
-    prompt = json.loads(response.content)["result"]
-    role_content = rag_role_content
+    # Get prompt from Upstash Redis
+    prompt = redis.get(key)
 
     # Stream the GPT-3.5 response to the client
     def stream_openai_response() -> Any:
@@ -409,7 +399,7 @@ async def stream_answer(key: str = Query(max_length=100)) -> StreamingResponse:
                 messages=[
                     {
                         "role": "system",
-                        "content": role_content,
+                        "content": rag_role_content,
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -430,8 +420,9 @@ async def stream_answer(key: str = Query(max_length=100)) -> StreamingResponse:
 
         try:
             for chunk in answer_response:
-                current_content = chunk["choices"][0]["delta"].get("content", "")
-                yield current_content
+                if "content" in chunk["choices"][0].delta:
+                    current_content = chunk["choices"][0].delta.content
+                    yield "data: " + current_content + "\n\n"
         except Exception as e:
             print("OpenAI Response (Streaming) Error: " + str(e))
             raise HTTPException(

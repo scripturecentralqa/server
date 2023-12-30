@@ -33,7 +33,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-          REGISTRY_ALIAS: g7f5o4m9
+          REGISTRY_ALIAS: x7m9c6r7
           ECR_REPOSITORY: scqa-server
           IMAGE_TAG: ${{ github.sha }}
         run: |

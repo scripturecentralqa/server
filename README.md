@@ -42,6 +42,8 @@ create a `.env` file with the following variables:
 OPENAI_API_KEY=your_openai_api_key (found on API keys page)
 PINECONE_API_KEY=your_pinecone_api_key (found on API keys page)
 PINECONE_ENV=your_pinecone_environment_name (found on API keys page)
+UPSTASH_REDIS_REST_URL=your upstash redis url
+UPSTASH_REDIS_REST_TOKEN=your upstash redis token
 ```
 
 ## Development
